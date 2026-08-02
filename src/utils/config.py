@@ -25,10 +25,10 @@ class Config:
     ]
 
     START_DATE = "2021-01-01"
-    END_DATE = "2024-06-30"
-    TRAIN_END_DATE = "2022-12-31"
-    VAL_END_DATE = "2023-06-30"
-    TEST_START_DATE = "2023-07-01"
+    END_DATE = "2025-12-30"
+    TRAIN_END_DATE = "2024-12-31"
+    VAL_END_DATE = "2025-06-30"
+    TEST_START_DATE = "202-07-01"
 
     # Technical indicator parameters
     RSI_WINDOW = 14
@@ -48,7 +48,7 @@ class Config:
     EPOCHS = 50
     HIDDEN_DIMS = [128, 64, 32]
     DROPOUT_RATE = 0.25
-    IC_LOSS_WEIGHT = 0.5
+    IC_LOSS_WEIGHT = 0.8
 
     # Risk Model & Optimization Parameters
     COV_LOOKBACK = 60

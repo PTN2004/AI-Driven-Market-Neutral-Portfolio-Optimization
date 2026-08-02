@@ -8,9 +8,6 @@ from src.utils.logger import get_logger
 logger = get_logger("FeatureEngineer")
 
 class FeatureEngineer:
-    """
-    Computes Momentum, Volatility, and Fundamental features for quant models.
-    """
     @staticmethod
     def get_feature_names() -> List[str]:
         return [

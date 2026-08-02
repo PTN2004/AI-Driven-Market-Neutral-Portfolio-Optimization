@@ -8,9 +8,7 @@ from src.data_pipeline.features import FeatureEngineer
 from src.utils.config import Config
 
 class StockDataset(Dataset):
-    """
-    PyTorch Dataset for stock cross-sectional tabular data.
-    """
+    
     def __init__(self, df: pd.DataFrame):
         self.feature_names = FeatureEngineer.get_feature_names()
         self.features = torch.tensor(df[self.feature_names].values, dtype=torch.float32)
@@ -26,12 +24,9 @@ def _to_dict(loader: DataLoader) -> Dict[str, Any]:
     return {"batch_size": loader.batch_size, "num_batches": len(loader)}
 
 def create_dataloaders(master_df: pd.DataFrame, batch_size: int = 64) -> Tuple[DataLoader, DataLoader, DataLoader, pd.DataFrame]:
-    """
-    Splits master dataframe into Train, Validation, and Test loaders without look-ahead leakage.
-    """
     train_df = master_df[master_df['date'] <= Config.TRAIN_END_DATE].copy()
     val_df = master_df[(master_df['date'] > Config.TRAIN_END_DATE) & (master_df['date'] <= Config.VAL_END_DATE)].copy()
-    test_df = master_df[(master_df['date'] >= Config.TEST_START_DATE) & (master_df['date'] <= Config.END_DATE)].copy()
+    test_df = master_df[(master_df['date'] > Config.VAL_END_DATE) & (master_df['date'] <= Config.END_DATE)].copy()
 
     train_ds = StockDataset(train_df)
     val_ds = StockDataset(val_df)

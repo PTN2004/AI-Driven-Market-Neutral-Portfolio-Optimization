@@ -13,10 +13,6 @@ from src.utils.logger import get_logger
 logger = get_logger("AlphaTrainer")
 
 class QuantLoss(nn.Module):
-    """
-    Hybrid loss function combining Mean Squared Error (MSE) and Pearson Rank IC Loss.
-    Encourages model to predict correct relative ranking of cross-sectional asset returns.
-    """
     def __init__(self, ic_weight: float = 0.5):
         super(QuantLoss, self).__init__()
         self.ic_weight = ic_weight
@@ -37,9 +33,6 @@ class QuantLoss(nn.Module):
         return (1.0 - self.ic_weight) * mse_loss + self.ic_weight * ic_loss
 
 class AlphaTrainer:
-    """
-    Trainer engine for PyTorch Alpha MLP/TFT models.
-    """
     def __init__(self, model: nn.Module, lr: float = 0.001, weight_decay: float = 0.0001):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(self.device)

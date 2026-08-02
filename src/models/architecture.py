@@ -37,9 +37,6 @@ class AlphaMLP(nn.Module):
         return self.network(x).squeeze(-1)
 
 class AlphaTFT(nn.Module):
-    """
-    Temporal Fusion / LSTM architecture for time series alpha prediction.
-    """
     def __init__(self, input_dim: int, hidden_dim: int = 64, num_layers: int = 2, dropout_rate: float = 0.25):
         super(AlphaTFT, self).__init__()
         self.lstm = nn.LSTM(
