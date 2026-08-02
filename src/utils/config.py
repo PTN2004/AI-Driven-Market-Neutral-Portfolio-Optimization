@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+
 class Config:
     """
     Central Configuration for AI-Driven Market Neutral Portfolio Optimization.
@@ -28,7 +29,7 @@ class Config:
     END_DATE = "2025-12-30"
     TRAIN_END_DATE = "2024-12-31"
     VAL_END_DATE = "2025-06-30"
-    TEST_START_DATE = "202-07-01"
+    TEST_START_DATE = "2025-07-01"
 
     # Technical indicator parameters
     RSI_WINDOW = 14

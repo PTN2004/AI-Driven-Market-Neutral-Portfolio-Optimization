@@ -67,7 +67,7 @@ class AlphaTrainer:
                 all_targets.append(y.cpu().numpy())
 
         preds_arr = np.concatenate(all_preds)
-        targets_arr = np.concatenate(all_targets)
+        targets_arr = np.concatenate(all_targets) 
         
         # Calculate validation IC
         p_dev = preds_arr - preds_arr.mean()

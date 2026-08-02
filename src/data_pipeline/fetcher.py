@@ -40,16 +40,14 @@ class DataFetcher:
     def _fetch_from_vnstock(self, symbol: str, retries: int = 3) -> Optional[pd.DataFrame]:
         for attempt in range(retries):
             try:
-                sleep_time = random.uniform(2.0, 4.0)
-                logger.info(
-                    f"Đang chờ {sleep_time:.2f}s trước khi tải {symbol}...")
-                time.sleep(sleep_time)
-                stock = Quote(symbol=symbol, source='VCI', random_agent=True)
+                stock = Quote(symbol=symbol, random_agent=True)
                 df = stock.history(start=Config.START_DATE,
                                    end=Config.END_DATE)
+
                 if df is not None and not df.empty:
                     df['date'] = pd.to_datetime(df['time'])
                     df = df.sort_values('date').reset_index(drop=True)
+
                     return df
             except Exception as e:
                 logger.debug(f"vnstock fetch failed for {symbol}: {e}")
@@ -76,10 +74,15 @@ class DataFetcher:
     def fetch_all(self, symbols: List[str] = None) -> Dict[str, pd.DataFrame]:
         if symbols is None:
             symbols = [Config.BENCHMARK_TICKER] + Config.DEFAULT_TICKERS
+        else:
+            symbols = [Config.BENCHMARK_TICKER] + symbols
         logger.info(
             f"Starting data ingestion for {len(symbols)} symbols ({Config.START_DATE} -> {Config.END_DATE})...")
         data = {}
-        for symbol in symbols:
+        for i, symbol in enumerate(symbols):
+            if (i+1) % 10 == 0:
+                logger.info(f"waiting 30s to Rate limit")
+                time.sleep(30)
             df = self.fetch_symbol(symbol)
             if df is not None and not df.empty:
                 data[symbol] = df
