@@ -9,9 +9,6 @@ from src.utils.logger import get_logger
 logger = get_logger("PortfolioOptimizer")
 
 class PortfolioOptimizer:
-    """
-    Markowitz Mean-Variance Convex Optimization with Market Neutral & Risk Orthogonalization constraints.
-    """
     def __init__(
         self,
         risk_aversion: float = 5.0,
@@ -50,11 +47,11 @@ class PortfolioOptimizer:
         objective = cp.Maximize(ret - (self.risk_aversion / 2.0) * risk)
 
         constraints = [
-            cp.norm(w, 1) <= 1.0001,             # Gross exposure = 100%
-            cp.sum(w) == 0.0,                    # Market neutral: sum(w) = 0
-            cp.abs(beta_vec @ w) <= self.beta_tol, # Risk orthogonalization: w^T * beta ~ 0
-            w <= self.max_weight,                # Max long weight per asset
-            w >= -self.max_weight                # Max short weight per asset
+            cp.norm(w, 1) <= 1.0001,             
+            cp.sum(w) == 0.0,                    
+            cp.abs(beta_vec @ w) <= self.beta_tol, 
+            w <= self.max_weight,                
+            w >= -self.max_weight                
         ]
 
         prob = cp.Problem(objective, constraints)
@@ -74,7 +71,6 @@ class PortfolioOptimizer:
     def _heuristic_fallback(self, mu_series: pd.Series, betas: pd.Series) -> np.ndarray:
         n = len(mu_series)
         ranks = mu_series.rank()
-        # Top half long, bottom half short
         w = np.where(ranks > n / 2, 1.0, -1.0)
         w = w / np.sum(np.abs(w))
         return w

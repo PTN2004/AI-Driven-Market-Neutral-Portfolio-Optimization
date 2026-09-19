@@ -34,6 +34,9 @@ class AlphaMLP(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.dim() == 3:
+            # If input is a sequence (batch, seq_len, features), use the last time step
+            x = x[:, -1, :]
         return self.network(x).squeeze(-1)
 
 class AlphaTFT(nn.Module):

@@ -8,10 +8,6 @@ from src.utils.logger import get_logger
 logger = get_logger("BacktestEngine")
 
 class BacktestEngine:
-    """
-    Out-of-sample backtesting engine simulation with realistic transaction fees,
-    rebalancing frequency, and slippage modeling.
-    """
     def __init__(
         self,
         predictor: Any,
@@ -53,7 +49,6 @@ class BacktestEngine:
 
         symbols = [s for s in cleaned_data.keys() if s != self.benchmark]
         
-        # Pre-extract daily price matrix for speed
         price_matrix = {}
         for sym in symbols:
             df = cleaned_data[sym]
@@ -97,11 +92,11 @@ class BacktestEngine:
                 except Exception as e:
                     logger.debug(f"Rebalance skipped on {date_str}: {e}")
 
-            # Calculate daily portfolio asset returns
             if idx > 0 and date_str in price_df.index and price_df.index[idx-1] in price_df.index:
-                p_today = price_df.loc[date_str]
+                p_today = price_df.iloc[idx]
                 p_prev = price_df.iloc[idx - 1]
                 daily_ret_vec = (p_today - p_prev) / (p_prev + 1e-8)
+                print(f"daily return - {daily_ret_vec} - {current_weights} - {tx_cost}")
                 port_ret = float((current_weights * daily_ret_vec).sum() - tx_cost)
             else:
                 port_ret = 0.0

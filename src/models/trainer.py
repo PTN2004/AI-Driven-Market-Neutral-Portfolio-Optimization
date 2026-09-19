@@ -21,13 +21,18 @@ class QuantLoss(nn.Module):
     def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         mse_loss = self.mse(preds, targets)
         
-        # Pearson IC loss
+        # When batch size is too small (e.g. single stock day), fall back to MSE
+        if preds.shape[0] < 2:
+            return mse_loss
+
+        # Daily cross-sectional Pearson IC loss
         pred_mean = preds - preds.mean()
         target_mean = targets - targets.mean()
         cov = (pred_mean * target_mean).mean()
         std_pred = torch.sqrt((pred_mean ** 2).mean() + 1e-8)
         std_target = torch.sqrt((target_mean ** 2).mean() + 1e-8)
         corr = cov / (std_pred * std_target)
+        corr = torch.clamp(corr, -1.0, 1.0)
         ic_loss = 1.0 - corr
 
         return (1.0 - self.ic_weight) * mse_loss + self.ic_weight * ic_loss
@@ -49,34 +54,32 @@ class AlphaTrainer:
             loss = self.criterion(preds, y)
             loss.backward()
             self.optimizer.step()
-            total_loss += loss.item() * len(x)
-        return total_loss / len(train_loader.dataset)
+            total_loss += loss.item()
+        return total_loss / max(len(train_loader), 1)
 
     def evaluate(self, val_loader: DataLoader) -> Dict[str, float]:
         self.model.eval()
         total_loss = 0.0
-        all_preds = []
-        all_targets = []
+        daily_ics = []
         with torch.no_grad():
             for x, y in val_loader:
                 x, y = x.to(self.device), y.to(self.device)
                 preds = self.model(x)
                 loss = self.criterion(preds, y)
-                total_loss += loss.item() * len(x)
-                all_preds.append(preds.cpu().numpy())
-                all_targets.append(y.cpu().numpy())
+                total_loss += loss.item()
 
-        preds_arr = np.concatenate(all_preds)
-        targets_arr = np.concatenate(all_targets) 
-        
-        # Calculate validation IC
-        p_dev = preds_arr - preds_arr.mean()
-        t_dev = targets_arr - targets_arr.mean()
-        ic = np.mean(p_dev * t_dev) / (np.std(preds_arr) * np.std(targets_arr) + 1e-8)
+                p = preds.cpu().numpy()
+                t = y.cpu().numpy()
+                if len(p) >= 2 and np.std(p) > 1e-6 and np.std(t) > 1e-6:
+                    p_dev = p - np.mean(p)
+                    t_dev = t - np.mean(t)
+                    ic = np.mean(p_dev * t_dev) / (np.std(p) * np.std(t) + 1e-8)
+                    daily_ics.append(ic)
 
+        mean_ic = float(np.mean(daily_ics)) if len(daily_ics) > 0 else 0.0
         return {
-            "loss": total_loss / len(val_loader.dataset),
-            "ic": float(ic)
+            "loss": total_loss / max(len(val_loader), 1),
+            "ic": mean_ic
         }
 
     def fit(self, train_loader: DataLoader, val_loader: DataLoader, epochs: int = 20) -> Dict[str, List[float]]:
